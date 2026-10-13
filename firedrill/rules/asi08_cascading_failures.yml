@@ -1,0 +1,21 @@
+title: Tool failures cascading across agents
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a13
+name: fd_cascading_errors
+status: experimental
+description: >
+  Tool errors from three or more distinct agents inside one trace within two
+  minutes. One agent retrying a flaky tool does not match.
+correlation:
+  type: value_count
+  rules:
+    - fd_base_tool_error
+  group-by:
+    - trace_id
+  timespan: 2m
+  condition:
+    field: gen_ai.agent.name
+    gte: 3
+level: medium
+tags:
+  - owasp-asi.asi08
+  - atlas.aml.t0029

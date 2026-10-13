@@ -1,0 +1,63 @@
+title: Lethal trifecta - untrusted content, then secret read, then external egress
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a01
+name: fd_lethal_trifecta
+status: experimental
+description: >
+  Within one conversation the agent ingested untrusted content, then read a
+  secret, then sent data outside the organisation, in that order. Behavioural:
+  it does not depend on recognising the injected text.
+correlation:
+  type: temporal_ordered
+  rules:
+    - fd_base_untrusted_ingest
+    - fd_base_sensitive_read
+    - fd_base_external_egress
+  group-by:
+    - gen_ai.conversation.id
+  timespan: 10m
+level: critical
+tags:
+  - owasp-asi.asi01
+  - owasp-asi.asi02
+  - atlas.aml.t0051.001
+  - atlas.aml.t0086
+---
+title: Injected instructions in a tool result followed by external egress
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a02
+name: fd_injection_then_egress
+status: experimental
+description: >
+  A tool returned content containing instruction-override language and the
+  same conversation then sent data outside the organisation.
+correlation:
+  type: temporal_ordered
+  rules:
+    - fd_base_injection_marker
+    - fd_base_external_egress
+  group-by:
+    - gen_ai.conversation.id
+  timespan: 5m
+level: high
+tags:
+  - owasp-asi.asi01
+  - atlas.aml.t0051.001
+  - atlas.aml.t0086
+---
+title: Model output embeds a markdown image with a data-bearing URL
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a03
+name: fd_markdown_image_exfil
+status: experimental
+description: >
+  The response contains a markdown image whose query string carries a long
+  opaque value. A chat client that renders it leaks that value to the image
+  host with no click.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: chat
+    gen_ai.output.messages|re: '!\[[^\]]*\]\(https?://[^)\s]+\?[^)\s]*=[A-Za-z0-9+/=_%-]{24,}'
+  condition: selection
+level: high
+tags:
+  - owasp-asi.asi01
+  - atlas.aml.t0077

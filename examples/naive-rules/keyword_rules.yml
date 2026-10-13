@@ -1,0 +1,67 @@
+# A deliberately naive rule pack: the keyword rules most teams write first.
+# Run `firedrill run --rules examples/naive-rules` to see why they are not
+# enough. Every one fires on its attack trace and on the benign twin.
+title: Naive - prompt injection phrase in tool output
+name: naive_injection_phrase
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.call.result|contains: 'ignore previous instructions'
+  condition: selection
+level: high
+---
+title: Naive - rm -rf in a command
+name: naive_rm_rf
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.call.arguments|contains: 'rm -rf'
+  condition: selection
+level: high
+---
+title: Naive - "credentials" in a file path
+name: naive_credentials_path
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.name: read_file
+    gen_ai.tool.call.arguments|contains: 'credentials'
+  condition: selection
+level: high
+---
+title: Naive - curl in a command
+name: naive_curl
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.call.arguments|contains: 'curl '
+  condition: selection
+level: medium
+---
+title: Naive - "always" written to memory
+name: naive_memory_always
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.name: write_memory
+    gen_ai.tool.call.arguments|contains: 'always'
+  condition: selection
+level: medium
+---
+title: Naive - crontab in a command
+name: naive_crontab
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.call.arguments|contains: 'crontab'
+  condition: selection
+level: medium
+---
+title: Naive - IMPORTANT in a tool definition
+name: naive_important_tag
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.tool.definitions|contains: 'IMPORTANT'
+  condition: selection
+level: medium

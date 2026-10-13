@@ -1,0 +1,43 @@
+title: Agent ran a destructive command
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a04
+name: fd_destructive_command
+status: experimental
+description: Recursive delete of a system or home path, or a schema-level SQL drop, issued through an agent tool.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.name:
+      - shell
+      - bash
+      - run_command
+      - execute_command
+      - terminal
+      - sql_query
+      - run_sql
+    gen_ai.tool.call.arguments|re|i: '(\brm\s+-[a-z]*r[a-z]*\s+(-[a-z-]+\s+)*(~|\$HOME|/(etc|var|usr|home|opt|srv|data|root)\b|/\s|/"|/\*)|\bdrop\s+(table|database|schema)\b|\btruncate\s+table\b|\bmkfs\.|\bdd\s+if=\S+\s+of=/dev/)'
+  condition: selection
+level: critical
+tags:
+  - owasp-asi.asi02
+  - atlas.aml.t0101
+---
+title: Runaway tool-call loop
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a05
+name: fd_tool_call_loop
+status: experimental
+description: One conversation called the same tool 20 or more times inside a minute.
+correlation:
+  type: event_count
+  rules:
+    - fd_base_tool_call
+  group-by:
+    - gen_ai.conversation.id
+    - gen_ai.tool.name
+  timespan: 1m
+  condition:
+    gte: 20
+level: medium
+tags:
+  - owasp-asi.asi02
+  - atlas.aml.t0034.002

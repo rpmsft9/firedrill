@@ -1,0 +1,32 @@
+title: Agent read a credential file
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a06
+name: fd_credential_file_access
+status: experimental
+description: A tool call referenced a well-known secret store. Templates such as .env.example are excluded.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.call.arguments|re|i: '(\.aws/credentials|\.ssh/id_[a-z0-9]+|\.env\b(?!\.(example|sample|template))|\.kube/config|\.npmrc|\.netrc|\.git-credentials|secrets?\.(json|ya?ml)|credentials\.json|\.pem\b)'
+  condition: selection
+level: high
+tags:
+  - owasp-asi.asi03
+  - atlas.aml.t0055
+  - atlas.aml.t0098
+---
+title: Agent granted a cloud role or policy
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a07
+name: fd_privilege_grant
+status: experimental
+description: The agent used its delegated identity to create a role assignment, attach a policy or mint an access key.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.call.arguments|re|i: '(\baz\s+role\s+assignment\s+create\b|\baws\s+iam\s+(attach-(user|role|group)-policy|put-(user|role|group)-policy|create-access-key|add-user-to-group)\b|\bgcloud\s+[^|;&]*add-iam-policy-binding\b|\bNew-(Az|Mg)RoleAssignment\b|\bkubectl\s+create\s+clusterrolebinding\b)'
+  condition: selection
+level: high
+tags:
+  - owasp-asi.asi03
+  - atlas.aml.t0053

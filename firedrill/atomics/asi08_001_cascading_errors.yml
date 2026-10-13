@@ -1,0 +1,63 @@
+id: FD-ASI08-001
+name: One failing dependency cascades through a multi-agent workflow
+severity: medium
+owasp_asi: [ASI08]
+owasp_llm: [LLM10]
+atlas: [AML.T0029]
+description: >
+  The retriever agent's upstream starts timing out. The planner retries, the
+  pricing and fulfilment agents inherit empty results and fail in turn. Within
+  a minute four agents in the same workflow are erroring.
+benign_note: >
+  A single agent retries a flaky tool four times and then succeeds.
+defaults:
+  gen_ai.provider.name: openai
+  gen_ai.request.model: gpt-4.1-mini
+attack:
+  - at: 0
+    repeat: 5
+    every: 4
+    attrs:
+      gen_ai.operation.name: execute_tool
+      gen_ai.agent.name: retriever-agent
+      gen_ai.tool.name: vector_search
+      error.type: timeout
+  - at: 6
+    repeat: 5
+    every: 5
+    attrs:
+      gen_ai.operation.name: execute_tool
+      gen_ai.agent.name: planner-agent
+      gen_ai.tool.name: delegate_task
+      error.type: upstream_unavailable
+  - at: 12
+    repeat: 5
+    every: 5
+    attrs:
+      gen_ai.operation.name: execute_tool
+      gen_ai.agent.name: pricing-agent
+      gen_ai.tool.name: get_quote
+      error.type: invalid_input
+  - at: 18
+    repeat: 5
+    every: 5
+    attrs:
+      gen_ai.operation.name: execute_tool
+      gen_ai.agent.name: fulfilment-agent
+      gen_ai.tool.name: create_order
+      error.type: invalid_input
+benign:
+  - at: 0
+    repeat: 4
+    every: 3
+    attrs:
+      gen_ai.operation.name: execute_tool
+      gen_ai.agent.name: retriever-agent
+      gen_ai.tool.name: vector_search
+      error.type: timeout
+  - at: 14
+    attrs:
+      gen_ai.operation.name: execute_tool
+      gen_ai.agent.name: retriever-agent
+      gen_ai.tool.name: vector_search
+      gen_ai.tool.call.result: "8 documents"

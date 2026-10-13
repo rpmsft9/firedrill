@@ -1,0 +1,97 @@
+# Building blocks for the correlation rules. Each is referenced by at least one
+# correlation, so (per the Sigma spec) none of them alerts on its own.
+title: Agent ingested untrusted external content
+name: fd_base_untrusted_ingest
+status: experimental
+description: A tool call that brings content the agent's operator does not control into the context window.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.name:
+      - fetch_url
+      - web_fetch
+      - web_search
+      - browse
+      - read_webpage
+      - http_get
+      - read_email
+      - read_ticket
+      - read_document
+  condition: selection
+level: informational
+---
+title: Agent read a secret-bearing file
+name: fd_base_sensitive_read
+status: experimental
+description: Kill-chain stage. Same pattern as the standalone credential file access rule.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.call.arguments|re|i: '(\.aws/credentials|\.ssh/id_[a-z0-9]+|\.env\b(?!\.(example|sample|template))|\.kube/config|\.npmrc|\.netrc|\.git-credentials|secrets?\.(json|ya?ml)|credentials\.json|\.pem\b)'
+  condition: selection
+level: informational
+---
+title: Agent sent data to a destination outside the organisation
+name: fd_base_external_egress
+status: experimental
+description: >
+  An outbound tool call whose arguments do not name an internal domain.
+  EDIT filter_internal: replace acme.example with your own domains. Matching on
+  the whole argument string is deliberately simple; an attacker who can place
+  an internal domain anywhere in the arguments slips past it.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.name:
+      - http_request
+      - http_post
+      - send_email
+      - post_message
+      - upload_file
+      - webhook
+  filter_internal:
+    gen_ai.tool.call.arguments|contains:
+      - 'acme.example'
+  condition: selection and not filter_internal
+level: informational
+---
+title: Instruction-override language in a tool result
+name: fd_base_injection_marker
+status: experimental
+description: >
+  Text addressed to the model inside content a tool returned. On its own this
+  is a weak signal (security blogs quote these phrases), so it only alerts
+  when followed by external egress.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.call.result|re|i: '(ignore (all |any )?(previous|prior|above) instructions|disregard (your|all|the) (previous |prior )?(instructions|rules)|do not (tell|mention|reveal|inform)[^.]{0,40}\buser\b|you are now (in )?[a-z ]{0,30}mode|new (system )?instructions?:|<\s*system\s*>|\bsystem override\b)'
+  condition: selection
+level: informational
+---
+title: Agent tool call
+name: fd_base_tool_call
+status: experimental
+description: Any tool execution. Counted by the runaway loop correlation.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+  condition: selection
+level: informational
+---
+title: Agent tool call failed
+name: fd_base_tool_error
+status: experimental
+description: A tool execution span that recorded an error. Counted by the cascading failure correlation.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    error.type|exists: true
+  condition: selection
+level: informational

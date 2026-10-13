@@ -1,0 +1,41 @@
+title: Hidden instructions in a tool description
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a08
+name: fd_tool_description_poisoning
+status: experimental
+description: >
+  A tool definition handed to the model tells it to act covertly or to feed
+  local secrets into the call. Needs tool definitions captured in telemetry
+  (gen_ai.tool.definitions is opt-in).
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection_definitions:
+    gen_ai.tool.definitions|re|i: &poison '(do not (tell|mention|inform|notify|reveal)[^.]{0,40}\buser\b|without (telling|informing|notifying|asking) the user|before (using|calling|invoking) this tool[^.]{0,160}\b(read|send|pass|upload)\b|<\s*important\s*>[^<]{0,400}(\.ssh|\.env|mcp\.json|credentials|token|secret))'
+  selection_description:
+    gen_ai.tool.description|re|i: *poison
+  condition: 1 of selection_*
+level: high
+tags:
+  - owasp-asi.asi04
+  - atlas.aml.t0110
+  - atlas.aml.t0010.005
+---
+title: Agent modified an agent configuration file
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a09
+name: fd_agent_config_tampering
+status: experimental
+description: A write to an MCP server list, agent settings file or standing instruction file. Reads are not matched.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.name:
+      - write_file
+      - edit_file
+      - create_file
+      - apply_patch
+    gen_ai.tool.call.arguments|re|i: '(mcp\.json|claude_desktop_config\.json|\.claude/settings(\.local)?\.json|\.cursor/rules|\.codex/config\.toml|AGENTS\.md|CLAUDE\.md|copilot-instructions\.md)'
+  condition: selection
+level: high
+tags:
+  - owasp-asi.asi04
+  - atlas.aml.t0081

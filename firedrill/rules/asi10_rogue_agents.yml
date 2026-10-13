@@ -1,0 +1,30 @@
+title: Agent tampered with its own logging or guardrails
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a14
+name: fd_oversight_tampering
+status: experimental
+description: The agent disabled telemetry export, deleted or truncated an audit log, or bypassed commit hooks.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.call.arguments|re|i: '(\bunset\s+OTEL_|\bOTEL_SDK_DISABLED\s*=\s*true|\bauditctl\s+-e\s*0|\b(rm|truncate|shred)\b[^|;&]*(audit|agent)[\w./-]*\.log|>\s*[\w./~-]*audit[\w./-]*\.log|\bgit\s+commit\b[^|;&]*--no-verify|\bhistory\s+-c\b|\bClear-EventLog\b|\bwevtutil\s+cl\b)'
+  condition: selection
+level: high
+tags:
+  - owasp-asi.asi10
+---
+title: Agent installed a scheduled or persistent job
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a15
+name: fd_unsanctioned_persistence
+status: experimental
+description: The agent installed a crontab, scheduled task or service, giving itself a way to keep running after the session ends.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.call.arguments|re|i: '(\|\s*crontab\s+-(\s|"|$)|\bschtasks\s+/create\b|\bsystemctl\s+(--user\s+)?enable\b|\blaunchctl\s+(load|bootstrap)\b)'
+  condition: selection
+level: high
+tags:
+  - owasp-asi.asi10
+  - atlas.aml.t0103

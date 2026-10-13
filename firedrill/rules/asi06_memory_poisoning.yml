@@ -1,0 +1,25 @@
+title: Standing instruction with an external destination written to agent memory
+id: 6f0c8a1e-3b5d-4c0a-9a41-0d1f5e7b2a12
+name: fd_memory_poisoning
+status: experimental
+description: >
+  A memory write that phrases a persistent behaviour ("from now on", "always")
+  and names an email address or URL. A stored preference with no destination
+  does not match.
+logsource: { product: ai_agent, category: genai_span }
+detection:
+  selection_tool:
+    gen_ai.operation.name: execute_tool
+    gen_ai.tool.name|contains:
+      - memory
+      - remember
+      - save_note
+  selection_standing:
+    gen_ai.tool.call.arguments|re|i: '\b(from now on|always|every time|in (all )?future|whenever you)\b'
+  selection_destination:
+    gen_ai.tool.call.arguments|re|i: '([\w.+-]+@[\w-]+\.[\w.-]+|https?://)'
+  condition: all of selection_*
+level: high
+tags:
+  - owasp-asi.asi06
+  - atlas.aml.t0080.000
