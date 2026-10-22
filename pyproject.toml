@@ -1,5 +1,5 @@
 [project]
-name = "firedrill"
+name = "agent-firedrill"
 version = "0.1.0"
 description = "Detection validation for AI agents: replay attack traces against your detection rules and measure coverage by OWASP Agentic Top 10 and MITRE ATLAS"
 readme = "README.md"
@@ -7,10 +7,27 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Raj Penchala" }]
 keywords = ["detection-engineering", "ai-security", "agentic", "sigma", "opentelemetry", "owasp", "mitre-atlas", "purple-team"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
 dependencies = ["pyyaml>=6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/rpmsft9/firedrill"
+Repository = "https://github.com/rpmsft9/firedrill"
+Issues = "https://github.com/rpmsft9/firedrill/issues"
+Changelog = "https://github.com/rpmsft9/firedrill/blob/main/CHANGELOG.md"
 
 [project.scripts]
 firedrill = "firedrill.cli:main"

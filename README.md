@@ -15,9 +15,13 @@ No LLM, no API key, no network. Runs offline in under a second.
 ## Quickstart
 
 ```bash
-pip install -e .
+pip install agent-firedrill
 firedrill run
 ```
+
+The PyPI name is `agent-firedrill`; the command and the Python package are
+`firedrill`. If the `firedrill` command is not on your PATH, `python -m firedrill`
+works the same way.
 
 ```
 firedrill 0.1.0: 17 atomics x 15 alerting rules
@@ -102,7 +106,7 @@ The bundled starter pack is in [firedrill/rules](firedrill/rules).
 ### Gate a pull request on detection coverage
 
 ```yaml
-- run: pip install firedrill
+- run: pip install agent-firedrill
 - run: firedrill run --rules detections/ --min-coverage 80 --max-noisy 0
 ```
 
